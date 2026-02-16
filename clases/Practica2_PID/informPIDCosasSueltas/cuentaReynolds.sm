@@ -4,7 +4,7 @@
   <settings ppi="96">
     <identity>
       <id>16436c25-99d0-4cab-8daa-91ef444354b0</id>
-      <revision>2</revision>
+      <revision>3</revision>
     </identity>
     <metadata lang="spa">
       <author>hortapimo</author>
@@ -150,6 +150,31 @@
         <result action="numeric">
           <e type="operand">7.31752</e>
           <e type="operand">10</e>
+          <e type="operand">3</e>
+          <e type="operator" args="2">^</e>
+          <e type="operator" args="2">*</e>
+        </result>
+      </math>
+    </region>
+    <region left="90" top="333" width="242" height="33" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V</e>
+          <e type="operand">64866</e>
+          <e type="operand" style="unit">mm</e>
+          <e type="operand">3</e>
+          <e type="operator" args="2">^</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">6.4866</e>
+          <e type="operand">10</e>
+          <e type="operand">5</e>
+          <e type="operator" args="1">-</e>
+          <e type="operator" args="2">^</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand" style="unit">m</e>
           <e type="operand">3</e>
           <e type="operator" args="2">^</e>
           <e type="operator" args="2">*</e>
