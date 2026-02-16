@@ -28,23 +28,20 @@ fin = rango_4bolitas[1]
 promedio = np.mean(senial[inicio:fin])
 desvio = np.std(senial[inicio:fin])
 print(promedio)
+print(promedio/np.sqrt(len(senial[inicio:fin])))
 print(desvio)
 
 #%%
 plt.style.use("seaborn-v0_8-talk")
 seniales_promedio = np.array([63.8, 70.2,75.9, 85.9, 92.2])
-std_seniales = np.array([3.8, 7.6,9.8,9.1,6.47*2]) #Tioene la señal muy cortado en la ultima medicion con lo cual el devio tiene un sesgo importante, lo multiplico por 2 asumiendo e l doble de la desicacion debido al corte
+std_seniales = np.array([4, 4.4,2.3,4.4,4]) #Tioene la señal muy cortado en la ultima medicion con lo cual el devio tiene un sesgo importante, lo multiplico por 2 asumiendo e l doble de la desicacion debido al corte
 caudal = 85*seniales_promedio/100
 errorCaudal=std_seniales*85/100
 masa = np.array([2052.2, 2286.9, 2530.9, 2907, 3117.8])
 fi2,ax2 = plt.subplots(figsize=(7,5))
 
-errores_bajos = errorCaudal
-errores_altos = np.array([3.8, 7.6,9.8,9.1,7.8])*85/100
 
-# Se pasan como una lista: [error_inferior, error_superior]
-yerr_asimetrico = [errores_bajos, errores_altos]
-ax2.errorbar(masa,caudal, yerr=yerr_asimetrico, fmt='s', ecolor='black', capthick=2,capsize=8)
+ax2.errorbar(masa,caudal, yerr=errorCaudal, fmt='s', ecolor='black', capthick=2,capsize=8)
 ax2.grid(which='major')
 ax2.minorticks_on()
 ax2.grid(which='minor', alpha=0.3)
