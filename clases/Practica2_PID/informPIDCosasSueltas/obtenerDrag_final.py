@@ -3,7 +3,9 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy import stats
 
+# Configuración de estilo profesional
 plt.style.use("seaborn-v0_8-talk")
+#plt.rcParams.update({'font.family': 'serif', 'text.usetex': False}) # Usar True si tenés LaTeX instalado
 
 # --- DATOS ---
 seniales_promedio = np.array([63.8, 70.2, 75.9, 85.9, 92.2])
@@ -26,7 +28,6 @@ def ajuste(m, Cd):
 # --- AJUSTE PONDERADO ---
 popt, pcov = curve_fit(ajuste, masa, y_exp, p0=[0.7], sigma=y_err, absolute_sigma=True)
 Cd_fit = popt[0]
-# El error de Cd es la raíz cuadrada de la diagonal de la matriz de covarianza
 Cd_error = np.sqrt(pcov[0,0])
 
 # --- ESTADÍSTICAS ---
@@ -36,6 +37,12 @@ gl = len(masa) - 1
 chi_cuadrado_red = chi_cuadrado / gl
 p_valor = stats.chi2.sf(chi_cuadrado, gl)
 
+# --- PROPAGACIÓN DE ERROR PARA BANDAS DE CONFIANZA ---
+# Derivada parcial |dy/dCd| = |y / Cd| para este modelo lineal en 1/Cd
+masa_aux = np.linspace(min(masa)*0.95, max(masa)*1.05, 100)
+y_aux = ajuste(masa_aux, Cd_fit)
+y_aux_error = np.abs(y_aux / Cd_fit) * Cd_error # Error propagado
+
 # --- GRÁFICO ---
 fig, (ax_top, ax_res) = plt.subplots(2, 1, figsize=(7, 6), sharex=True, 
                                      gridspec_kw={'height_ratios': [3, 1]})
@@ -43,35 +50,48 @@ fig, (ax_top, ax_res) = plt.subplots(2, 1, figsize=(7, 6), sharex=True,
 factor_eje_y = 1e4
 factor_eje_x = 1e6 # Para visualizar en mg
 
-# Gráfico principal con Cd +/- error en la leyenda
-ax_top.errorbar(masa*factor_eje_x, y_exp*factor_eje_y, yerr=y_err*factor_eje_y, fmt='s', ecolor='black', 
-                capthick=2, capsize=8, label="Datos exp.")
+# Gráfico principal
+ax_top.errorbar(masa*factor_eje_x, y_exp*factor_eje_y, yerr=y_err*factor_eje_y, 
+                fmt='s', color='black', markerfacecolor='white', markeredgewidth=1.5,
+                ecolor='black', capsize=4, label="Datos experimentales", zorder=3)
 
-masa_aux = np.linspace(min(masa)*0.98, max(masa)*1.02, 100)
-ax_top.plot(masa_aux*factor_eje_x, ajuste(masa_aux, Cd_fit)*factor_eje_y, color='red', 
-            label=f"Ajuste: $C_d = {Cd_fit:.3f} \pm {Cd_error:.3f}$")
+ax_top.plot(masa_aux*factor_eje_x, y_aux*factor_eje_y, color='firebrick', lw=2,
+            label=f"Ajuste: $C_d = {Cd_fit:.2f} \pm {Cd_error:.2f}$", zorder=2)
 
-# Cuadro de texto simplificado
-stats_text = (f"$\chi^2_{{red}} = {chi_cuadrado_red:.2f}$\n"
-              f"$p$-valor $= {p_valor:.3f}$")
-ax_top.text(0.05, 0.95, stats_text, transform=ax_top.transAxes, verticalalignment='top',
-            bbox=dict(boxstyle='round', facecolor='white', alpha=0.5), fontsize=13)
+# Banda de confianza (1 sigma)
+ax_top.fill_between(masa_aux*factor_eje_x, (y_aux - y_aux_error)*factor_eje_y, 
+                    (y_aux + y_aux_error)*factor_eje_y, color='firebrick', alpha=0.15, 
+                    label="Banda de confianza ($1\sigma$)", zorder=1)
 
-ax_top.set_ylabel(r"Caudal$^2$ [m$^6$/s$^2 \cdot 10^{-4}$]")
-ax_top.legend(loc='lower right')
-ax_top.grid(True, which="both", alpha=0.3)
-ax_top.minorticks_on()
+# Cuadro de texto con métricas
+stats_text = (f"$\chi^2_{{\\nu}} = {chi_cuadrado_red:.2f}$\n"
+              f"$p$-valor $= {p_valor:.2f}$")
+ax_top.text(0.05, 0.92, stats_text, transform=ax_top.transAxes, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='white', edgecolor='gray', alpha=0.8), fontsize=12)
 
-# Gráfico de residuos
+ax_top.set_ylabel(r"$Q^2$ [$10^{-4}$ m$^6$/s$^2$]", fontsize=13)
+ax_top.legend(loc='lower right', frameon=True, fontsize=11)
+
+# --- GRÁFICO DE RESIDUOS CORREGIDO ---
 residuos = y_exp - y_fit
-ax_res.errorbar(masa*factor_eje_x, residuos*factor_eje_y, yerr=y_err*factor_eje_y, fmt='o', color='purple', 
-                ecolor='black', capsize=4)
-ax_res.axhline(0, color='black', linestyle='--', linewidth=1)
-ax_res.set_ylabel(r"Res. [m$^6$/s$^2 \cdot 10^{-4}$]")
-ax_res.set_xlabel("Masa vaso [mg]")
-ax_res.grid(True, which="both", alpha=0.3)
-ax_res.minorticks_on()
+ax_res.errorbar(masa*factor_eje_x, residuos*factor_eje_y, yerr=y_err*factor_eje_y, 
+                fmt='s',                 # Cambiado a cuadrado para consistencia
+                color='royalblue',       # Color de la línea de conexión (si hubiera)
+                ecolor='black',          # Color de las barras de error
+                capsize=3,               # Ancho de los remates de las barras
+                markerfacecolor='white', # Fondo blanco para resaltar
+                markeredgecolor='black', # Borde negro (esto arregla el problema)
+                markeredgewidth=1.5)     # Grosor del borde
+
+ax_res.axhline(0, color='black', linestyle='-', linewidth=1, alpha=0.7)
+ax_res.set_ylabel(r"Residuos", fontsize=12)
+ax_res.set_xlabel("Masa del vaso [mg]", fontsize=13)
+
+# Ajustes finales de grilla y escala
+for ax in [ax_top, ax_res]:
+    ax.grid(True, linestyle='--', alpha=0.6)
+    ax.tick_params(labelsize=11)
 
 plt.tight_layout()
-plt.subplots_adjust(hspace=0.08)
+plt.subplots_adjust(hspace=0.1)
 plt.show()
