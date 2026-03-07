@@ -1,0 +1,2 @@
+timeout 30s socat -u /dev/ttyUSB0,b115200 STDOUT > captura_final.csv
+
